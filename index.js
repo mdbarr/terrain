@@ -21,7 +21,6 @@ const noise = perlin.generatePerlinNoise(width, height, {
 
 ////////////////////
 
-const symbols = '░▒▓█';
 const colors = [
   'NavyBlue',
   'DarkBlue',
@@ -51,10 +50,9 @@ for (let y = 0; y < height; y++) {
   let line = '';
   for (let x = 0; x < width; x++) {
     const value = noise[(y * width) + x];
-    const symbol = symbols[Math.floor(value * symbols.length)];
     const color = colors[Math.floor(value * colors.length)];
 
-    line += barrkeep.style(symbol, color);
+    line += barrkeep.style(' ', `background: ${ color }`);
   }
   console.log(line);
 }
