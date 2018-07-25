@@ -1,0 +1,20 @@
+{
+  "name": "terrain",
+  "version": "0.0.1",
+  "description": "Simple ascii terrain generator using perlin noise",
+  "main": "index.js",
+  "repository": "git@github.com:mdbarr/terrain.git",
+  "author": "Mark Barr <mark@hyperingenuity.com>",
+  "license": "MIT",
+  "private": false,
+  "dependencies": {
+    "barrkeep": "^1.3.1",
+    "perlin-noise": "^0.0.1"
+  },
+  "devDependencies": {
+    "eslint": "^5.2.0"
+  },
+  "scripts": {
+    "lint": "eslint index.js"
+  }
+}
