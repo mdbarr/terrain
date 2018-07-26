@@ -1,2 +1,8 @@
 # terrain
-Simple ascii terrain generator using perlin noise
+Simple ASCII / PNG terrain generator using Perlin Noise
+
+```
+yarn install
+
+./index.js
+```
