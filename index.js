@@ -17,6 +17,8 @@ let height = 24;
 let octaves = 4;
 let amplitude = 0.1;
 let persistence = 0.2;
+let padStart = 0;
+let padEnd = 0;
 
 if (process.stdout.isTTY) {
   width = process.stdout.columns;
@@ -33,6 +35,10 @@ if (options.h || options.height) {
   height = parseInt(options.h || options.height);
 }
 
+if (options.s || options.size) {
+  width = height = parseInt(options.s || options.size);
+}
+
 if (options.octaves) {
   octaves = parseInt(options.octaves);
 }
@@ -45,6 +51,18 @@ if (options.persistence) {
   persistence = parseFloat(options.persistence);
 }
 
+if (options.padding) {
+  padStart = padEnd = parseInt(options.padding);
+}
+
+if (options.padStart || options['pad-start']) {
+  padStart = parseInt(options.padStart || options['pad-start']);
+}
+
+if (options.padEnd || options['pad-end']) {
+  padEnd = parseInt(options.padEnd || options['pad-end']);
+}
+
 ////////////////////
 
 const noise = perlin.generatePerlinNoise(width, height, {
@@ -55,30 +73,7 @@ const noise = perlin.generatePerlinNoise(width, height, {
 
 ////////////////////
 
-const terminalColors = [
-  'NavyBlue',
-  'DarkBlue',
-  'DarkBlue',
-  'Blue3',
-  'Blue3',
-  'Blue1',
-  'Blue1',
-  'DodgerBlue1',
-  'DodgerBlue1',
-  'DeepSkyBlue1',
-  'DarkKhaki',
-  'DarkKhaki',
-  'Green4',
-  'Green4',
-  'Green4',
-  'Grey35',
-  'Grey50',
-  'Grey85',
-  'Grey93',
-  'White'
-];
-
-const pngColors = [
+const defaultColors = [
   [ 56, 39, 201 ],
   [ 56, 40, 201 ],
   [ 56, 42, 201 ],
@@ -181,13 +176,27 @@ const pngColors = [
   [ 41, 79, 19 ]
 ];
 
+const colors = (options.palette) ?
+  extractor(options.palette, false) : defaultColors;
+
+if (padStart) {
+  const start = colors[0];
+  for (let s = 0; s < padStart; s++) {
+    colors.unshift(start);
+  }
+}
+
+if (padEnd) {
+  const end = colors[colors.length - 1];
+  for (let e = 0; e < padEnd; e++) {
+    colors.push(end);
+  }
+}
+
 ////////////////////
 
 if (options.png) {
   const data = new Buffer(width * height * 4);
-
-  const colors = (options.palette) ?
-    extractor(options.palette, false) : pngColors;
 
   for (let y = 0, index = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
@@ -219,7 +228,9 @@ if (options.png) {
     let line = '';
     for (let x = 0; x < width; x++) {
       const value = noise[(y * width) + x];
-      const color = terminalColors[Math.floor(value * terminalColors.length)];
+      const rgb = colors[Math.floor(value * colors.length)];
+
+      const color = '#' + rgb.map(c => c.toString(16).padStart(2, '0')).join('');
 
       line += barrkeep.style(' ', `background: ${ color }`);
     }
