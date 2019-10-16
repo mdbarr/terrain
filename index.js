@@ -28,47 +28,47 @@ if (process.stdout.isTTY) {
 const options = minimist(process.argv.slice(2));
 
 if (options.w || options.width) {
-  width = parseInt(options.w || options.width);
+  width = parseInt(options.w || options.width, 10);
 }
 
 if (options.h || options.height) {
-  height = parseInt(options.h || options.height);
+  height = parseInt(options.h || options.height, 10);
 }
 
 if (options.s || options.size) {
-  width = height = parseInt(options.s || options.size);
+  width = height = parseInt(options.s || options.size, 10);
 }
 
 if (options.octaves) {
-  octaves = parseInt(options.octaves);
+  octaves = parseInt(options.octaves, 10);
 }
 
 if (options.amplitude) {
-  amplitude = parseFloat(options.amplitude);
+  amplitude = parseFloat(options.amplitude, 10);
 }
 
 if (options.persistence) {
-  persistence = parseFloat(options.persistence);
+  persistence = parseFloat(options.persistence, 10);
 }
 
 if (options.padding) {
-  padStart = padEnd = parseInt(options.padding);
+  padStart = padEnd = parseInt(options.padding, 10);
 }
 
 if (options.padStart || options['pad-start']) {
-  padStart = parseInt(options.padStart || options['pad-start']);
+  padStart = parseInt(options.padStart || options['pad-start'], 10);
 }
 
 if (options.padEnd || options['pad-end']) {
-  padEnd = parseInt(options.padEnd || options['pad-end']);
+  padEnd = parseInt(options.padEnd || options['pad-end'], 10);
 }
 
 ////////////////////
 
 const noise = perlin.generatePerlinNoise(width, height, {
   octaveCount: octaves,
-  amplitude: amplitude,
-  persistence: persistence
+  amplitude,
+  persistence
 });
 
 ////////////////////
@@ -176,7 +176,7 @@ const defaultColors = [
   [ 41, 79, 19 ]
 ];
 
-const colors = (options.palette) ?
+const colors = options.palette ?
   extractor(options.palette, false) : defaultColors;
 
 if (padStart) {
@@ -200,7 +200,7 @@ if (options.png) {
 
   for (let y = 0, index = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
-      const value = noise[(y * width) + x];
+      const value = noise[y * width + x];
       const color = colors[Math.floor(value * colors.length)];
 
       data[index] = color[0];
@@ -217,20 +217,21 @@ if (options.png) {
   png.height = height;
   png.data = data;
 
-  const filename = (options.o || options.out) || 'terrain.png';
+  const filename = options.o || options.out || 'terrain.png';
   const buffer = PNG.sync.write(png);
 
   fs.writeFileSync(filename, buffer);
-  console.log(`${ filename }, ${ width } x ${ height } (${ octaves } / ${ amplitude } / ${ persistence })`);
+  console.log(`${ filename }, ${ width } x ${ height } (${ octaves }` +
+              ` / ${ amplitude } / ${ persistence })`);
 } else {
   // ascii
   for (let y = 0; y < height; y++) {
     let line = '';
     for (let x = 0; x < width; x++) {
-      const value = noise[(y * width) + x];
+      const value = noise[y * width + x];
       const rgb = colors[Math.floor(value * colors.length)];
 
-      const color = '#' + rgb.map(c => c.toString(16).padStart(2, '0')).join('');
+      const color = `#${ rgb.map(c => { return c.toString(16).padStart(2, '0'); }).join('') }`;
 
       line += barrkeep.style(' ', `background: ${ color }`);
     }

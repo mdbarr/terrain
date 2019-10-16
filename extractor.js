@@ -3,8 +3,8 @@
 const fs = require('fs');
 const PNG = require('pngjs').PNG;
 
-function rgbToHex(rgb) {
-  return '#' + rgb.map(x => x.toString(16).padStart(2, '0')).join('');
+function rgbToHex (rgb) {
+  return `#${ rgb.map(x => { return x.toString(16).padStart(2, '0'); }).join('') }`;
 }
 
 module.exports = function(filename, hexMode) {
