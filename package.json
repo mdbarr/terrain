@@ -1,6 +1,6 @@
 {
   "name": "terrain",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Simple ASCII / PNG terrain generator using Perlin Noise",
   "main": "index.js",
   "repository": "git@github.com:mdbarr/terrain.git",
