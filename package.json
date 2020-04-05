@@ -9,7 +9,7 @@
   "private": false,
   "dependencies": {
     "barrkeep": "^2.2.9",
-    "minimist": "^1.2.0",
+    "minimist": "^1.2.3",
     "perlin-noise": "^0.0.1",
     "pngjs": "^3.4.0"
   },
