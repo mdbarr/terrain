@@ -2,16 +2,36 @@
   <div>
     <canvas
       ref="canvas"
-      width="750"
-      height="600"
-    />
-    <br>
-    <v-btn
       class="ma-3"
-      @click="generate"
+    />
+    <v-card
+      width="400"
+      class="ma-3"
     >
-      Generate
-    </v-btn>
+      <v-card-text>
+        <v-row>
+          <v-col cols="6">
+            <v-text-field
+              v-model="width"
+              dense
+              label="width"
+            />
+          </v-col>
+          <v-col cols="6">
+            <v-text-field
+              v-model="height"
+              dense
+              label="height"
+            />
+          </v-col>
+        </v-row>
+        <v-btn
+          @click="generate"
+        >
+          Generate
+        </v-btn>
+      </v-card-text>
+    </v-card>
   </div>
 </template>
 
@@ -197,7 +217,11 @@ const colors = [
 export default {
   name: 'Terrain',
   data () {
-    return { state };
+    return {
+      state,
+      width: 750,
+      height: 600,
+    };
   },
   mounted () {
     this.generate();
@@ -205,20 +229,17 @@ export default {
   methods: {
     generate () {
       const canvas = this.$refs.canvas;
-      const rect = canvas.getBoundingClientRect();
       const context = canvas.getContext('2d');
 
-      /*
-        const dpr = window.devicePixelRatio || 1;
-        canvas.width = rect.width * dpr;
-        canvas.height = rect.height * dpr;
-        canvas.style.width = rect.width + 'px';
-        canvas.style.height = rect.height + 'px';
-        context.scale(dpr, dpr);
-      */
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = this.width * dpr;
+      canvas.height = this.height * dpr;
+      canvas.style.width = `${ this.width }px`;
+      canvas.style.height = `${ this.height }px`;
+      context.scale(dpr, dpr);
 
-      const imageData = context.getImageData(0, 0, rect.width, rect.height);
-      const noise = generatePerlinNoise(rect.width, rect.height, {
+      const imageData = context.getImageData(0, 0, this.width, this.height);
+      const noise = generatePerlinNoise(this.width, this.height, {
         octaveCount: 8, persistence: 0.5,
       });
 
