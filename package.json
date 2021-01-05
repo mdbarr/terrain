@@ -1,0 +1,49 @@
+{
+  "name": "terrain",
+  "version": "0.0.1",
+  "description": "Terrain and City Generator",
+  "main": "index.js",
+  "repository": "git@github.com:mdbarr/terrain",
+  "author": "mark@hyperingenuity.com",
+  "license": "MIT",
+  "private": false,
+ "dependencies": {
+    "@hyperingenuity/vue-plugin": "^0.7.1",
+    "barrkeep": "^2.8.0",
+    "core-js": "^3.8.2",
+    "vue": "^2.6.12",
+    "vue-router": "^3.4.9",
+    "vuetify": "^2.4.0",
+    "yargs": "^16.2.0"
+  },
+  "devDependencies": {
+    "@vue/cli-plugin-babel": "^4.5.9",
+    "@vue/cli-plugin-eslint": "^4.5.9",
+    "@vue/cli-plugin-router": "^4.5.9",
+    "@vue/cli-service": "^4.5.9",
+    "@vue/eslint-config-standard": "^6.0.0",
+    "babel-eslint": "^10.1.0",
+    "eslint": "^7.17.0",
+    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-standard": "^5.0.0",
+    "eslint-plugin-vue": "^7.4.0",
+    "sass": "^1.32.0",
+    "sass-loader": "^10.1.0",
+    "stylelint": "^13.8.0",
+    "stylelint-config-standard": "^20.0.0",
+    "stylelint-order": "^4.1.0",
+    "stylelint-webpack-plugin": "^2.1.1",
+    "vue-cli-plugin-vuetify": "^2.0.9",
+    "vue-template-compiler": "^2.6.12",
+    "vuetify-loader": "^1.6.0"
+  },
+  "scripts": {
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build",
+    "lint": "vue-cli-service lint",
+    "lint:css": "stylelint 'src/*.vue' 'src/**/*.vue'",
+    "fix": "yarn lint --fix; yarn lint:css --fix"
+  }
+}
