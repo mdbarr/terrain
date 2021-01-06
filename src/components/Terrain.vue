@@ -214,6 +214,15 @@ const colors = [
   [ 41, 79, 19 ],
 ];
 
+function random (min, max) {
+  return Math.floor(Math.random() * (max - min) + min);
+}
+
+function pick (array) {
+  const index = random(0, array.length);
+  return array[index];
+}
+
 export default {
   name: 'Terrain',
   data () {
@@ -227,6 +236,9 @@ export default {
     this.generate();
   },
   methods: {
+    distance (x1, y1, x2, y2) {
+      return Math.sqrt(Math.pow((x1 - x2), 2) + Math.pow((y1 - y2), 2));
+    },
     generate () {
       const canvas = this.$refs.canvas;
       const context = canvas.getContext('2d');
@@ -240,17 +252,120 @@ export default {
 
       const imageData = context.getImageData(0, 0, this.width, this.height);
       const noise = generatePerlinNoise(this.width, this.height, {
-        octaveCount: 8, persistence: 0.5,
+        octaveCount: 9, persistence: 0.60,
       });
 
+      const highest = [];
+
       for (let n = 0, i = 0; n < noise.length; n++, i += 4) {
+        if ((noise[n] * colors.length) >= 90) {
+          const [ x, y ] = this.nToXY(n);
+
+          let tooClose = false;
+
+          for (const coord of highest) {
+            const [ x2, y2 ] = coord;
+            if (this.distance(x, y, x2, y2) < 10) {
+              tooClose = true;
+            }
+          }
+
+          if (!tooClose) {
+            highest.push([ x, y ]);
+          }
+        }
+
         const color = colors[Math.floor(noise[n] * colors.length)];
         imageData.data[i] = color[0];
         imageData.data[i + 1] = color[1];
         imageData.data[i + 2] = color[2];
         imageData.data[i + 3] = 255;
       }
+
+      const rivers = [];
+
+      for (const coord of highest) {
+        let [ x, y ] = coord;
+        let n = this.xyToN(x, y);
+        let i = 0;
+
+        while (noise[n] > 0.58 && i < 10000) {
+          imageData.data[n * 4] = 63;
+          imageData.data[(n * 4) + 1] = 169;
+          imageData.data[(n * 4) + 2] = 219;
+
+          rivers.push(`${ x },${ y }`);
+
+          const candidates = [];
+          if (this.isValid(x - 1, y - 1)) {
+            candidates.push([ x - 1, y - 1 ]);
+          }
+          if (this.isValid(x, y - 1)) {
+            candidates.push([ x, y - 1 ]);
+          }
+          if (this.isValid(x + 1, y - 1)) {
+            candidates.push([ x + 1, y - 1 ]);
+          }
+          if (this.isValid(x - 1, y)) {
+            candidates.push([ x - 1, y ]);
+          }
+          if (this.isValid(x + 1, y)) {
+            candidates.push([ x + 1, y ]);
+          }
+          if (this.isValid(x - 1, y + 1)) {
+            candidates.push([ x - 1, y + 1 ]);
+          }
+          if (this.isValid(x, y + 1)) {
+            candidates.push([ x, y + 1 ]);
+          }
+          if (this.isValid(x + 1, y + 1)) {
+            candidates.push([ x + 1, y + 1 ]);
+          }
+
+          const possibles = [];
+          for (const candidate of candidates) {
+            if (this.isLower(noise, n, candidate[0], candidate[1]) &&
+              !rivers.includes(`${ candidates[0] },${ candidates[1] }`)) {
+              possibles.push(candidate);
+            }
+          }
+
+          if (possibles.length) {
+            [ x, y ] = pick(possibles);
+          } else {
+            [ x, y ] = pick(candidates);
+          }
+
+          n = this.xyToN(x, y);
+          i++;
+        }
+      }
+
       context.putImageData(imageData, 0, 0);
+    },
+    isLower (noise, n, x, y) {
+      const n2 = this.xyToN(x, y);
+      return noise[n2] < noise[n];
+    },
+    isValid (x, y) {
+      if (x < 0 || x > this.width) {
+        return false;
+      }
+
+      if (y < 0 || y > this.height) {
+        return false;
+      }
+
+      return true;
+    },
+    nToXY (n) {
+      const x = n % this.width;
+      const y = (n - x) / this.width;
+
+      return [ x, y ];
+    },
+    xyToN (x, y) {
+      return (y * this.width) + x;
     },
   },
 };
