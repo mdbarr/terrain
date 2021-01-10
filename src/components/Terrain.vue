@@ -289,7 +289,7 @@ export default {
         let n = this.xyToN(x, y);
         let i = 0;
 
-        while (noise[n] > 0.58 && i < 10000) {
+        while (noise[n] > 0.58 && i < 15000) {
           imageData.data[n * 4] = 63;
           imageData.data[(n * 4) + 1] = 169;
           imageData.data[(n * 4) + 2] = 219;
