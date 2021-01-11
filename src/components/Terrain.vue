@@ -38,79 +38,6 @@
 <script>
 import state from '@/state';
 
-function interpolate (x0, x1, alpha) {
-  return x0 * (1 - alpha) + alpha * x1;
-}
-
-function generateWhiteNoise (width, height) {
-  const noise = new Array(width * height);
-  for (let i = 0; i < noise.length; ++i) {
-    noise[i] = Math.random();
-  }
-  return noise;
-}
-
-function generatePerlinNoise (width, height, options) {
-  options = options || {};
-
-  const octaveCount = options.octaveCount || 4;
-  const persistence = options.persistence || 0.2;
-  const whiteNoise = generateWhiteNoise(width, height);
-
-  let amplitude = options.amplitude || 0.1;
-
-  function generateSmoothNoise (octave) {
-    const noise = new Array(width * height);
-    const samplePeriod = Math.pow(2, octave);
-    const sampleFrequency = 1 / samplePeriod;
-    let noiseIndex = 0;
-    for (let y = 0; y < height; ++y) {
-      const sampleY0 = Math.floor(y / samplePeriod) * samplePeriod;
-      const sampleY1 = (sampleY0 + samplePeriod) % height;
-      const vertBlend = (y - sampleY0) * sampleFrequency;
-      for (let x = 0; x < width; ++x) {
-        const sampleX0 = Math.floor(x / samplePeriod) * samplePeriod;
-        const sampleX1 = (sampleX0 + samplePeriod) % width;
-        const horizBlend = (x - sampleX0) * sampleFrequency;
-
-        // blend top two corners
-        const top = interpolate(whiteNoise[sampleY0 * width + sampleX0],
-          whiteNoise[sampleY1 * width + sampleX0], vertBlend);
-        // blend bottom two corners
-        const bottom = interpolate(whiteNoise[sampleY0 * width + sampleX1],
-          whiteNoise[sampleY1 * width + sampleX1], vertBlend);
-        // final blend
-        noise[noiseIndex] = interpolate(top, bottom, horizBlend);
-        noiseIndex += 1;
-      }
-    }
-    return noise;
-  }
-
-  const smoothNoiseList = new Array(octaveCount);
-  for (let i = 0; i < octaveCount; ++i) {
-    smoothNoiseList[i] = generateSmoothNoise(i);
-  }
-  const perlinNoise = new Array(width * height);
-  let totalAmplitude = 0;
-
-  for (let i = octaveCount - 1; i >= 0; --i) {
-    amplitude *= persistence;
-    totalAmplitude += amplitude;
-
-    for (let j = 0; j < perlinNoise.length; ++j) {
-      perlinNoise[j] = perlinNoise[j] || 0;
-      perlinNoise[j] += smoothNoiseList[i][j] * amplitude;
-    }
-  }
-
-  for (let i = 0; i < perlinNoise.length; ++i) {
-    perlinNoise[i] /= totalAmplitude;
-  }
-
-  return perlinNoise;
-}
-
 const colors = [
   [ 56, 39, 201 ],
   [ 56, 40, 201 ],
@@ -230,6 +157,7 @@ export default {
       state,
       width: 750,
       height: 600,
+      terrain: null,
     };
   },
   mounted () {
@@ -251,14 +179,14 @@ export default {
       context.scale(dpr, dpr);
 
       const imageData = context.getImageData(0, 0, this.width, this.height);
-      const noise = generatePerlinNoise(this.width, this.height, {
+      this.terrain = this.generatePerlinNoise(this.width, this.height, {
         octaveCount: 9, persistence: 0.60,
       });
 
       const highest = [];
 
-      for (let n = 0, i = 0; n < noise.length; n++, i += 4) {
-        if ((noise[n] * colors.length) >= 90) {
+      for (let n = 0, i = 0; n < this.terrain.length; n++, i += 4) {
+        if ((this.terrain[n] * colors.length) >= 90) {
           const [ x, y ] = this.nToXY(n);
 
           let tooClose = false;
@@ -275,7 +203,7 @@ export default {
           }
         }
 
-        const color = colors[Math.floor(noise[n] * colors.length)];
+        const color = colors[Math.floor(this.terrain[n] * colors.length)];
         imageData.data[i] = color[0];
         imageData.data[i + 1] = color[1];
         imageData.data[i + 2] = color[2];
@@ -289,7 +217,7 @@ export default {
         let n = this.xyToN(x, y);
         let i = 0;
 
-        while (noise[n] > 0.58 && i < 15000) {
+        while (this.terrain[n] > 0.58 && i < 15000) {
           imageData.data[n * 4] = 63;
           imageData.data[(n * 4) + 1] = 169;
           imageData.data[(n * 4) + 2] = 219;
@@ -324,7 +252,7 @@ export default {
 
           const possibles = [];
           for (const candidate of candidates) {
-            if (this.isLower(noise, n, candidate[0], candidate[1]) &&
+            if (this.isLower(this.terrain, n, candidate[0], candidate[1]) &&
               !rivers.includes(`${ candidates[0] },${ candidates[1] }`)) {
               possibles.push(candidate);
             }
@@ -342,6 +270,76 @@ export default {
       }
 
       context.putImageData(imageData, 0, 0);
+    },
+    generatePerlinNoise (width, height, options) {
+      options = options || {};
+
+      const octaveCount = options.octaveCount || 4;
+      const persistence = options.persistence || 0.2;
+      const whiteNoise = this.generateWhiteNoise(width, height);
+
+      let amplitude = options.amplitude || 0.1;
+
+      const generateSmoothNoise = (octave) => {
+        const noise = new Array(width * height);
+        const samplePeriod = Math.pow(2, octave);
+        const sampleFrequency = 1 / samplePeriod;
+        let noiseIndex = 0;
+        for (let y = 0; y < height; ++y) {
+          const sampleY0 = Math.floor(y / samplePeriod) * samplePeriod;
+          const sampleY1 = (sampleY0 + samplePeriod) % height;
+          const vertBlend = (y - sampleY0) * sampleFrequency;
+          for (let x = 0; x < width; ++x) {
+            const sampleX0 = Math.floor(x / samplePeriod) * samplePeriod;
+            const sampleX1 = (sampleX0 + samplePeriod) % width;
+            const horizBlend = (x - sampleX0) * sampleFrequency;
+
+            // blend top two corners
+            const top = this.interpolate(whiteNoise[sampleY0 * width + sampleX0],
+              whiteNoise[sampleY1 * width + sampleX0], vertBlend);
+            // blend bottom two corners
+            const bottom = this.interpolate(whiteNoise[sampleY0 * width + sampleX1],
+              whiteNoise[sampleY1 * width + sampleX1], vertBlend);
+            // final blend
+            noise[noiseIndex] = this.interpolate(top, bottom, horizBlend);
+            noiseIndex += 1;
+          }
+        }
+        return noise;
+      };
+
+      const smoothNoiseList = new Array(octaveCount);
+      for (let i = 0; i < octaveCount; ++i) {
+        smoothNoiseList[i] = generateSmoothNoise(i);
+      }
+      const perlinNoise = new Array(width * height);
+      let totalAmplitude = 0;
+
+      for (let i = octaveCount - 1; i >= 0; --i) {
+        amplitude *= persistence;
+        totalAmplitude += amplitude;
+
+        for (let j = 0; j < perlinNoise.length; ++j) {
+          perlinNoise[j] = perlinNoise[j] || 0;
+          perlinNoise[j] += smoothNoiseList[i][j] * amplitude;
+        }
+      }
+
+      for (let i = 0; i < perlinNoise.length; ++i) {
+        perlinNoise[i] /= totalAmplitude;
+      }
+
+      return perlinNoise;
+    },
+    generateWhiteNoise (width, height) {
+      const noise = new Array(width * height);
+      for (let i = 0; i < noise.length; ++i) {
+        noise[i] = Math.random();
+      }
+      return noise;
+    },
+    interpolate (x0, x1, alpha) {
+      return x0 * (1 - alpha) + alpha * x1;
     },
     isLower (noise, n, x, y) {
       const n2 = this.xyToN(x, y);
