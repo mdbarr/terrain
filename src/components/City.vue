@@ -55,8 +55,8 @@ export default {
   data () {
     return {
       state,
-      width: 750,
-      height: 600,
+      width: 375,
+      height: 300,
     };
   },
   mounted () {
@@ -67,12 +67,11 @@ export default {
       const canvas = this.$refs.canvas;
       const context = canvas.getContext('2d');
 
-      const dpr = window.devicePixelRatio || 1;
-      canvas.width = this.width * dpr;
-      canvas.height = this.height * dpr;
-      canvas.style.width = `${ this.width }px`;
-      canvas.style.height = `${ this.height }px`;
-      context.scale(dpr, dpr);
+      canvas.width = this.width;
+      canvas.height = this.height;
+      // Lazy scaling
+      canvas.style.width = `${ this.width * 2 }px`;
+      canvas.style.height = `${ this.height * 2 }px`;
 
       context.fillStyle = 'white';
       context.fillRect(0, 0, this.width, this.height);
