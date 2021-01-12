@@ -54,37 +54,31 @@ function pick (array) {
 const KEYS = {};
 const TYPES = [
   {
-    id: 'free', color: [ 255, 255, 255 ],
+    id: 'water', color: [ 53, 90, 203 ],
   },
   {
-    id: 'commercial', color: [ 63, 63, 63 ],
+    id: 'shore', color: [ 198, 203, 178 ],
   },
   {
-    id: 'grass', color: [ 0, 200, 0 ],
+    id: 'mountain', color: [ 42, 42, 42 ],
   },
   {
-    id: 'forest', color: [ 0, 127, 0 ],
+    id: 'undeveloped', color: [ 71, 156, 45 ],
   },
   {
-    id: 'highway', color: [ 0, 0, 0 ],
+    id: 'residential', color: [ 0, 63, 255 ],
   },
   {
-    id: 'industry', color: [ 255, 255, 0 ],
+    id: 'commercial', color: [ 255, 0, 0 ],
   },
   {
-    id: 'pasture', color: [ 63, 255, 63 ],
+    id: 'industrial', color: [ 63, 0, 204 ],
   },
   {
-    id: 'residential', color: [ 21, 63, 255 ],
+    id: 'park', color: [ 204, 255, 204 ],
   },
   {
-    id: 'road', color: [ 21, 21, 21 ],
-  },
-  {
-    id: 'sea', color: [ 63, 204, 255 ],
-  },
-  {
-    id: 'urban', color: [ 63, 0, 204 ],
+    id: 'road', color: [ 16, 16, 16 ],
   },
 ].map((item, index) => {
   item.value = index;
@@ -115,30 +109,25 @@ export default {
       const type = this.city[i];
       const neighbors = this.neighborhood(i);
 
-      if (neighbors.RESIDENTIAL >= 3 && neighbors.SEA === 0 &&
-        neighbors.FOREST === 0 && neighbors.INDUSTRY === 0) {
+      if (type === TYPES.WATER || type === TYPES.SHORE || type === TYPES.MOUNTAIN) {
+        this.city[i] = type;
+      } else if (neighbors.RESIDENTIAL > 4) {
+        this.city[i] = KEYS.PARK;
+      } if (neighbors.UNDEVELOPED > 6 && (neighbors.RESIDENTIAL !== 0 ||
+        neighbors.COMMERCIAL !== 0 || neighbors.INDUSTRIAL !== 0)) {
+        const which = Math.max(neighbors.RESIDENTIAL, neighbors.COMMERCIAL, neighbors.INDUSTRIAL);
+        if (which === neighbors.RESIDENTIAL) {
+          this.city[i] = KEYS.RESIDENTIAL;
+        } else if (which === neighbors.COMMERCIAL) {
+          this.city[i] = KEYS.COMMERCIAL;
+        } else {
+          this.city[i] = KEYS.INDUSTRIAL;
+        }
+      } else if (neighbors.RESIDENTIAL > 3) {
         this.city[i] = KEYS.RESIDENTIAL;
-      } else if (neighbors.COMMERCIAL >= 3 && neighbors.SEA === 0 &&
-        neighbors.FOREST === 0 && neighbors.INDUSTRY === 0) {
-        this.city[i] = KEYS.COMMERCIAL;
-      } else if (neighbors.ROAD > 0 && neighbors.RESIDENTIAL > 0) {
-        this.city[i] = KEYS.RESIDENTIAL;
-      } else if ((neighbors.ROAD > 0 || neighbors.highway > 0) && neighbors.COMMERCIAL > 0) {
-        this.city[i] = KEYS.COMMERCIAL;
-      } else if (type === KEYS.URBAN || type === KEYS.RESIDENTIAL || type === KEYS.COMMERCIAL) {
-        this.city[i] = type; // retain
-      } else if ((type === KEYS.FOREST || type === KEYS.PASTURE || type === KEYS.GRASS) &&
-        neighbors.COMMERCIAL > 3 && neighbors.HIGHWAY > 0) {
-        this.city[i] = KEYS.COMMERCIAL;
-      } else if ((type === KEYS.FOREST || type === KEYS.PASTURE || type === KEYS.GRASS) &&
-        neighbors.RESIDENTIAL > 4) {
-        this.city[i] = KEYS.RESIDENTIAL;
-      } else if (neighbors.COMMERCIAL > 0 && neighbors.RESIDENTIAL > 0 &&
-        neighbors.COMMERCIAL > neighbors.RESIDENTIAL) {
-        this.city[i] = KEYS.COMMERCIAL;
-      } else if (neighbors.COMMERCIAL > 0 && neighbors.RESIDENTIAL > 0 &&
-        neighbors.COMMERCIAL < neighbors.RESIDENTIAL) {
-        this.city[i] = KEYS.RESIDENTIAL;
+      } else if ((neighbors.RESIDENTIAL > 0 || neighbors.COMMERCIAL > 0 ||
+        neighbors.INDUSTRIAL > 0) && neighbors.ROAD === 0) {
+        this.city[i] = KEYS.ROAD;
       }
     },
     generate () {
@@ -156,12 +145,12 @@ export default {
 
       //////////
 
-      this.city = new Array(this.width * this.height).fill(KEYS.FOREST);
+      this.city = new Array(this.width * this.height).fill(KEYS.UNDEVELOPED);
 
       const x = Math.floor(this.width / 2);
       const y = Math.floor(this.height / 2);
       const initial = this.xyToIndex(x, y);
-      this.city[initial] = KEYS.RESIDENTIAL;
+      this.city[initial] = KEYS.UNDEVELOPED;
 
       const start = Date.now();
 
@@ -179,7 +168,7 @@ export default {
           }
         }
       }
-      console.log('done - %dms', Date.now() - start);
+      console.log('done -', this.$utils.duration(Date.now() - start));
 
       //////////
 
@@ -261,13 +250,14 @@ export default {
     },
     preseed (x, y) {
       const pickables = [
-        KEYS.COMMERCIAL,
-        KEYS.HIGHWAY,
-        KEYS.INDUSTRY,
         KEYS.RESIDENTIAL,
+        KEYS.COMMERCIAL,
+        KEYS.INDUSTRIAL,
+        KEYS.PARK,
         KEYS.ROAD,
-        KEYS.URBAN,
       ];
+
+      console.log(pickables);
 
       for (let s = 0; s < SEEDS; s++) {
         const x1 = random(x - WINDOW_SIZE, x + WINDOW_SIZE);
