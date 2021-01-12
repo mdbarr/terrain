@@ -51,6 +51,16 @@ function pick (array) {
   return array[index];
 }
 
+function shuffle (array) {
+  for (let i = 0; i < array.length; i++) {
+    const j = random(0, array.length);
+
+    const value = array[i];
+    array[i] = array[j];
+    array[j] = value;
+  }
+}
+
 //////////
 
 const TYPES = [
@@ -135,33 +145,7 @@ export default {
         this.city[i] = TYPES.ROAD;
       }
     },
-    generate () {
-      const canvas = this.$refs.canvas;
-      const context = canvas.getContext('2d');
-
-      canvas.width = this.width;
-      canvas.height = this.height;
-      // Lazy scaling
-      canvas.style.width = `${ this.width * this.scale }px`;
-      canvas.style.height = `${ this.height * this.scale }px`;
-
-      context.fillStyle = 'white';
-      context.fillRect(0, 0, this.width, this.height);
-
-      //////////
-
-      this.city = new Array(this.width * this.height).fill(TYPES.UNDEVELOPED);
-
-      const x = Math.floor(this.width / 2);
-      const y = Math.floor(this.height / 2);
-      const initial = this.xyToIndex(x, y);
-      this.city[initial] = TYPES.UNDEVELOPED;
-
-      const start = Date.now();
-
-      console.log('preseeding...');
-      this.preseed(x, y);
-
+    flipFlopEvolve (x, y) {
       console.log('determining...');
       const candidatesYX = [];
       for (let y0 = y - WINDOW_SIZE; y0 < y + WINDOW_SIZE; y0++) {
@@ -200,6 +184,36 @@ export default {
           }
         }
       }
+    },
+    generate () {
+      const canvas = this.$refs.canvas;
+      const context = canvas.getContext('2d');
+
+      canvas.width = this.width;
+      canvas.height = this.height;
+      // Lazy scaling
+      canvas.style.width = `${ this.width * this.scale }px`;
+      canvas.style.height = `${ this.height * this.scale }px`;
+
+      context.fillStyle = 'white';
+      context.fillRect(0, 0, this.width, this.height);
+
+      //////////
+
+      this.city = new Array(this.width * this.height).fill(TYPES.UNDEVELOPED);
+
+      const x = Math.floor(this.width / 2);
+      const y = Math.floor(this.height / 2);
+      const initial = this.xyToIndex(x, y);
+      this.city[initial] = TYPES.UNDEVELOPED;
+
+      const start = Date.now();
+
+      console.log('preseeding...');
+      this.preseed(x, y);
+
+      // this.flipFlopEvolve(x, y);
+      this.shuffleEvolve(x, y);
 
       console.log('done -', this.$utils.duration(Date.now() - start));
 
@@ -290,8 +304,6 @@ export default {
         TYPES.ROAD,
       ];
 
-      console.log(pickables);
-
       for (let s = 0; s < SEEDS; s++) {
         const x1 = random(x - WINDOW_SIZE, x + WINDOW_SIZE);
         const y1 = random(y - WINDOW_SIZE, y + WINDOW_SIZE);
@@ -299,6 +311,26 @@ export default {
         if (this.isValid(x1, y1)) {
           const index = this.xyToIndex(x1, y1);
           this.city[index] = pick(pickables);
+        }
+      }
+    },
+    shuffleEvolve (x, y) {
+      console.log('determining...');
+      const candidates = [];
+
+      for (let y0 = y - WINDOW_SIZE; y0 < y + WINDOW_SIZE; y0++) {
+        for (let x0 = x - WINDOW_SIZE; x0 < x + WINDOW_SIZE; x0++) {
+          if (this.isValid(x0, y0)) {
+            candidates.push(this.xyToIndex(x0, y0));
+          }
+        }
+      }
+
+      console.log('evolving...');
+      for (let e = 0; e < EVOLUTIONS; e++) {
+        shuffle(candidates);
+        for (let i = 0; i < candidates.length; i++) {
+          this.evolve(candidates[i]);
         }
       }
     },
