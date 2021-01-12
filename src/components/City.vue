@@ -38,33 +38,50 @@
 <script>
 import state from '@/state';
 
-const STATES = {
-  FREE: 0,
-  COMMERCIAL: 1,
-  FARM: 2,
-  FOREST: 3,
-  HIGHWAY: 4,
-  INDUSTRY: 5,
-  PASTURE: 6,
-  RESIDENTIAL: 7,
-  ROAD: 7,
-  SEA: 9,
-  URBAN: 10,
-};
+const KEYS = {};
 
-const COLORS = [
-  [ 255, 255, 255 ], // Free
-  [ 63, 63, 63 ], // Commercial
-  [ 0, 127, 0 ], // Farm
-  [ 0, 255, 0 ], // Forest
-  [ 0, 0, 0 ], // Highway
-  [ 255, 255, 0 ], // Industry
-  [ 63, 255, 63 ], // Pasture
-  [ 21, 63, 255 ], // Residential
-  [ 21, 21, 21 ], // Road
-  [ 63, 204, 255 ], // Sea
-  [ 63, 0, 204 ], // Urban
-];
+const TYPES = [
+  {
+    id: 'free', color: [ 255, 255, 255 ],
+  },
+  {
+    id: 'commercial', color: [ 63, 63, 63 ],
+  },
+  {
+    id: 'farm', color: [ 0, 127, 0 ],
+  },
+  {
+    id: 'forest', color: [ 0, 255, 0 ],
+  },
+  {
+    id: 'highway', color: [ 0, 0, 0 ],
+  },
+  {
+    id: 'industry', color: [ 255, 255, 0 ],
+  },
+  {
+    id: 'pasture', color: [ 63, 255, 63 ],
+  },
+  {
+    id: 'residential', color: [ 21, 63, 255 ],
+  },
+  {
+    id: 'road', color: [ 21, 21, 21 ],
+  },
+  {
+    id: 'sea', color: [ 63, 204, 255 ],
+  },
+  {
+    id: 'urban', color: [ 63, 0, 204 ],
+  },
+].map((item, index) => {
+  item.value = index;
+  item.key = item.id.toUpperCase();
+
+  KEYS[item.key] = item;
+
+  return item;
+});
 
 export default {
   name: 'City',
@@ -80,6 +97,12 @@ export default {
     this.generate();
   },
   methods: {
+    evolve (i) {
+      const type = this.city[i];
+      const neighborhood = this.neighborhood(i);
+
+      console.log(type, neighborhood);
+    },
     generate () {
       const canvas = this.$refs.canvas;
       const context = canvas.getContext('2d');
@@ -95,17 +118,20 @@ export default {
 
       //////////
 
-      this.city = new Array(this.width * this.height).fill(STATES.FREE);
+      this.city = new Array(this.width * this.height).fill(KEYS.FREE);
 
       const initial = this.xyToIndex(Math.floor(this.width / 2), Math.floor(this.height / 2));
-      this.city[initial] = STATES.RESIDENTIAL;
+      this.city[initial] = KEYS.RESIDENTIAL;
+
+      this.evolve(initial);
 
       //////////
 
       const imageData = context.getImageData(0, 0, this.width, this.height);
 
       for (let i = 0, n = 0; i < this.city.length; i++, n += 4) {
-        const color = COLORS[this.city[i]];
+        const type = this.city[i];
+        const color = type.color;
         imageData.data[n] = color[0];
         imageData.data[n + 1] = color[1];
         imageData.data[n + 2] = color[2];
@@ -132,7 +158,54 @@ export default {
       return true;
     },
     neighborhood (i) {
-      return i;
+      const neighbors = {};
+      for (const type of TYPES) {
+        neighbors[type.key] = 0;
+      }
+
+      for (const neighbor of this.neighbors(i)) {
+        const which = this.which(...neighbor);
+        neighbors[which.key]++;
+      }
+
+      return neighbors;
+    },
+    neighbors (i) {
+      const [ x, y ] = this.indexToXY(i);
+      const neighbors = [];
+
+      if (this.isValid(x - 1, y - 1)) {
+        neighbors.push([ x - 1, y - 1 ]);
+      }
+      if (this.isValid(x, y - 1)) {
+        neighbors.push([ x, y - 1 ]);
+      }
+      if (this.isValid(x + 1, y - 1)) {
+        neighbors.push([ x + 1, y - 1 ]);
+      }
+
+      if (this.isValid(x - 1, y)) {
+        neighbors.push([ x - 1, y ]);
+      }
+      if (this.isValid(x - 1, y)) {
+        neighbors.push([ x - 1, y ]);
+      }
+
+      if (this.isValid(x - 1, y + 1)) {
+        neighbors.push([ x - 1, y + 1 ]);
+      }
+      if (this.isValid(x, y + 1)) {
+        neighbors.push([ x, y + 1 ]);
+      }
+      if (this.isValid(x + 1, y + 1)) {
+        neighbors.push([ x + 1, y + 1 ]);
+      }
+
+      return neighbors;
+    },
+    which (x, y) {
+      const index = this.xyToIndex(x, y);
+      return this.city[index];
     },
     xyToIndex (x, y) {
       return (this.width * y) + x;
