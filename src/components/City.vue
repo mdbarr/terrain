@@ -48,10 +48,10 @@ const TYPES = [
     id: 'commercial', color: [ 63, 63, 63 ],
   },
   {
-    id: 'farm', color: [ 0, 127, 0 ],
+    id: 'grass', color: [ 0, 200, 0 ],
   },
   {
-    id: 'forest', color: [ 0, 255, 0 ],
+    id: 'forest', color: [ 0, 127, 0 ],
   },
   {
     id: 'highway', color: [ 0, 0, 0 ],
@@ -99,9 +99,33 @@ export default {
   methods: {
     evolve (i) {
       const type = this.city[i];
-      const neighborhood = this.neighborhood(i);
+      const neighbors = this.neighborhood(i);
 
-      console.log(type, neighborhood);
+      if (neighbors.RESIDENTIAL >= 3 && neighbors.SEA === 0 &&
+        neighbors.FOREST === 0 && neighbors.INDUSTRY === 0) {
+        this.city[i] = KEYS.RESIDENTIAL;
+      } else if (neighbors.COMMERCIAL >= 3 && neighbors.SEA === 0 &&
+        neighbors.FOREST === 0 && neighbors.INDUSTRY === 0) {
+        this.city[i] = KEYS.COMMERCIAL;
+      } else if (neighbors.ROAD > 0 && neighbors.RESIDENTIAL > 0) {
+        this.city[i] = KEYS.RESIDENTIAL;
+      } else if ((neighbors.ROAD > 0 || neighbors.highway > 0) && neighbors.COMMERCIAL > 0) {
+        this.city[i] = KEYS.COMMERCIAL;
+      } else if (type === KEYS.URBAN || type === KEYS.RESIDENTIAL || type === KEYS.COMMERCIAL) {
+        this.city[i] = type; // retain
+      } else if ((type === KEYS.FOREST || type === KEYS.PASTURE || type === KEYS.GRASS) &&
+        neighbors.COMMERCIAL > 3 && neighbors.HIGHWAY > 0) {
+        this.city[i] = KEYS.COMMERCIAL;
+      } else if ((type === KEYS.FOREST || type === KEYS.PASTURE || type === KEYS.GRASS) &&
+        neighbors.RESIDENTIAL > 4) {
+        this.city[i] = KEYS.RESIDENTIAL;
+      } else if (neighbors.COMMERCIAL > neighbors.RESIDENTIAL) {
+        this.city[i] = KEYS.COMMERCIAL;
+      } else if (neighbors.COMMERCIAL < neighbors.RESIDENTIAL) {
+        this.city[i] = KEYS.RESIDENTIAL;
+      }
+
+      console.log(type.id, this.city[i].id, neighbors);
     },
     generate () {
       const canvas = this.$refs.canvas;
@@ -118,12 +142,12 @@ export default {
 
       //////////
 
-      this.city = new Array(this.width * this.height).fill(KEYS.FREE);
+      this.city = new Array(this.width * this.height).fill(KEYS.FOREST);
 
       const initial = this.xyToIndex(Math.floor(this.width / 2), Math.floor(this.height / 2));
       this.city[initial] = KEYS.RESIDENTIAL;
 
-      this.evolve(initial);
+      this.evolve(initial - 1);
 
       //////////
 
@@ -187,8 +211,8 @@ export default {
       if (this.isValid(x - 1, y)) {
         neighbors.push([ x - 1, y ]);
       }
-      if (this.isValid(x - 1, y)) {
-        neighbors.push([ x - 1, y ]);
+      if (this.isValid(x + 1, y)) {
+        neighbors.push([ x + 1, y ]);
       }
 
       if (this.isValid(x - 1, y + 1)) {
