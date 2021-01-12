@@ -376,7 +376,7 @@ export default {
       return [ x, y ];
     },
     xyToN (x, y) {
-      return (y * this.width) + x;
+      return (this.width * y) + x;
     },
   },
 };

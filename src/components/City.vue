@@ -38,6 +38,18 @@
 <script>
 import state from '@/state';
 
+const STATES = {
+  FREE: 0,
+  CITY: 1,
+  ROAD: 2,
+};
+
+const COLORS = [
+  [ 255, 255, 255 ],
+  [ 255, 0, 0 ],
+  [ 57, 57, 57 ],
+];
+
 export default {
   name: 'City',
   data () {
@@ -65,13 +77,35 @@ export default {
       context.fillStyle = 'white';
       context.fillRect(0, 0, this.width, this.height);
 
+      //////////
+
+      const values = new Array(this.width * this.height).fill(STATES.FREE);
+
+      const initial = this.xyToIndex(Math.floor(this.width / 2), Math.floor(this.height / 2));
+      values[initial] = STATES.CITY;
+
+      //////////
+
       const imageData = context.getImageData(0, 0, this.width, this.height);
 
-      for (let i = 0; i < 5000; i += 11) {
-        imageData.data[200000 + i] = 127;
+      for (let i = 0, n = 0; i < values.length; i++, n += 4) {
+        const color = COLORS[values[i]];
+        imageData.data[n] = color[0];
+        imageData.data[n + 1] = color[1];
+        imageData.data[n + 2] = color[2];
+        imageData.data[n + 3] = 255;
       }
 
       context.putImageData(imageData, 0, 0);
+    },
+    indexToXY (i) {
+      const x = i % this.width;
+      const y = (i - x) / this.width;
+
+      return [ x, y ];
+    },
+    xyToIndex (x, y) {
+      return (this.width * y) + x;
     },
   },
 };
