@@ -3,6 +3,7 @@
     <canvas
       ref="canvas"
       class="ma-3"
+      @click="clicked"
     />
     <v-card
       width="400"
@@ -164,6 +165,10 @@ export default {
     this.generate();
   },
   methods: {
+    clicked (event) {
+      const n = this.xyToN(event.x, event.y);
+      console.log('click', event.x, event.y, n, this.terrain[n]);
+    },
     distance (x1, y1, x2, y2) {
       return Math.sqrt(Math.pow((x1 - x2), 2) + Math.pow((y1 - y2), 2));
     },
@@ -185,6 +190,8 @@ export default {
 
       const highest = [];
 
+      const seeds = [];
+
       for (let n = 0, i = 0; n < this.terrain.length; n++, i += 4) {
         if ((this.terrain[n] * colors.length) >= 90) {
           const [ x, y ] = this.nToXY(n);
@@ -193,7 +200,7 @@ export default {
 
           for (const coord of highest) {
             const [ x2, y2 ] = coord;
-            if (this.distance(x, y, x2, y2) < 10) {
+            if (this.distance(x, y, x2, y2) < 100) {
               tooClose = true;
             }
           }
@@ -203,12 +210,18 @@ export default {
           }
         }
 
+        if (this.terrain[n] > 0.60 && this.terrain[n] < 0.61) {
+          seeds.push(n);
+        }
+
         const color = colors[Math.floor(this.terrain[n] * colors.length)];
         imageData.data[i] = color[0];
         imageData.data[i + 1] = color[1];
         imageData.data[i + 2] = color[2];
         imageData.data[i + 3] = 255;
       }
+
+      console.log('seeds', seeds.length);
 
       const rivers = [];
 
