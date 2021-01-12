@@ -40,14 +40,30 @@ import state from '@/state';
 
 const STATES = {
   FREE: 0,
-  CITY: 1,
-  ROAD: 2,
+  COMMERCIAL: 1,
+  FARM: 2,
+  FOREST: 3,
+  HIGHWAY: 4,
+  INDUSTRY: 5,
+  PASTURE: 6,
+  RESIDENTIAL: 7,
+  ROAD: 7,
+  SEA: 9,
+  URBAN: 10,
 };
 
 const COLORS = [
-  [ 255, 255, 255 ],
-  [ 255, 0, 0 ],
-  [ 57, 57, 57 ],
+  [ 255, 255, 255 ], // Free
+  [ 63, 63, 63 ], // Commercial
+  [ 0, 127, 0 ], // Farm
+  [ 0, 255, 0 ], // Forest
+  [ 0, 0, 0 ], // Highway
+  [ 255, 255, 0 ], // Industry
+  [ 63, 255, 63 ], // Pasture
+  [ 21, 63, 255 ], // Residential
+  [ 21, 21, 21 ], // Road
+  [ 63, 204, 255 ], // Sea
+  [ 63, 0, 204 ], // Urban
 ];
 
 export default {
@@ -57,6 +73,7 @@ export default {
       state,
       width: 375,
       height: 300,
+      city: null,
     };
   },
   mounted () {
@@ -78,17 +95,17 @@ export default {
 
       //////////
 
-      const values = new Array(this.width * this.height).fill(STATES.FREE);
+      this.city = new Array(this.width * this.height).fill(STATES.FREE);
 
       const initial = this.xyToIndex(Math.floor(this.width / 2), Math.floor(this.height / 2));
-      values[initial] = STATES.CITY;
+      this.city[initial] = STATES.RESIDENTIAL;
 
       //////////
 
       const imageData = context.getImageData(0, 0, this.width, this.height);
 
-      for (let i = 0, n = 0; i < values.length; i++, n += 4) {
-        const color = COLORS[values[i]];
+      for (let i = 0, n = 0; i < this.city.length; i++, n += 4) {
+        const color = COLORS[this.city[i]];
         imageData.data[n] = color[0];
         imageData.data[n + 1] = color[1];
         imageData.data[n + 2] = color[2];
@@ -102,6 +119,20 @@ export default {
       const y = (i - x) / this.width;
 
       return [ x, y ];
+    },
+    isValid (x, y) {
+      if (x < 0 || x > this.width) {
+        return false;
+      }
+
+      if (y < 0 || y > this.height) {
+        return false;
+      }
+
+      return true;
+    },
+    neighborhood (i) {
+      return i;
     },
     xyToIndex (x, y) {
       return (this.width * y) + x;
