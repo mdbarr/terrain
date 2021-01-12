@@ -38,7 +38,18 @@
 <script>
 import state from '@/state';
 
-const WINDOW_SIZE = 50;
+const SEEDS = 100;
+const EVOLUTIONS = 500;
+const WINDOW_SIZE = 20;
+
+function random (min, max) {
+  return Math.floor(Math.random() * (max - min) + min);
+}
+
+function pick (array) {
+  const index = random(0, array.length);
+  return array[index];
+}
 
 const KEYS = {};
 const TYPES = [
@@ -89,8 +100,9 @@ export default {
   data () {
     return {
       state,
-      width: 375,
-      height: 300,
+      width: 250,
+      height: 200,
+      scale: 3,
       city: null,
       window: [],
     };
@@ -128,8 +140,6 @@ export default {
         neighbors.COMMERCIAL < neighbors.RESIDENTIAL) {
         this.city[i] = KEYS.RESIDENTIAL;
       }
-
-      console.log(type.id, this.city[i].id, neighbors);
     },
     generate () {
       const canvas = this.$refs.canvas;
@@ -138,8 +148,8 @@ export default {
       canvas.width = this.width;
       canvas.height = this.height;
       // Lazy scaling
-      canvas.style.width = `${ this.width * 2 }px`;
-      canvas.style.height = `${ this.height * 2 }px`;
+      canvas.style.width = `${ this.width * this.scale }px`;
+      canvas.style.height = `${ this.height * this.scale }px`;
 
       context.fillStyle = 'white';
       context.fillRect(0, 0, this.width, this.height);
@@ -153,14 +163,23 @@ export default {
       const initial = this.xyToIndex(x, y);
       this.city[initial] = KEYS.RESIDENTIAL;
 
-      for (let y0 = y - WINDOW_SIZE; y0 < y + WINDOW_SIZE; y0++) {
-        for (let x0 = x - WINDOW_SIZE; x0 < x + WINDOW_SIZE; x0++) {
-          if (this.isValid(x0, y0)) {
-            const index = this.xyToIndex(x0, y0);
-            this.evolve(index);
+      const start = Date.now();
+
+      console.log('preseeding...');
+      this.preseed(x, y);
+
+      console.log('evolving...');
+      for (let e = 0; e < EVOLUTIONS; e++) {
+        for (let y0 = y - WINDOW_SIZE; y0 < y + WINDOW_SIZE; y0++) {
+          for (let x0 = x - WINDOW_SIZE; x0 < x + WINDOW_SIZE; x0++) {
+            if (this.isValid(x0, y0)) {
+              const index = this.xyToIndex(x0, y0);
+              this.evolve(index);
+            }
           }
         }
       }
+      console.log('done - %dms', Date.now() - start);
 
       //////////
 
@@ -239,6 +258,26 @@ export default {
       }
 
       return neighbors;
+    },
+    preseed (x, y) {
+      const pickables = [
+        KEYS.COMMERCIAL,
+        KEYS.HIGHWAY,
+        KEYS.INDUSTRY,
+        KEYS.RESIDENTIAL,
+        KEYS.ROAD,
+        KEYS.URBAN,
+      ];
+
+      for (let s = 0; s < SEEDS; s++) {
+        const x1 = random(x - WINDOW_SIZE, x + WINDOW_SIZE);
+        const y1 = random(y - WINDOW_SIZE, y + WINDOW_SIZE);
+
+        if (this.isValid(x1, y1)) {
+          const index = this.xyToIndex(x1, y1);
+          this.city[index] = pick(pickables);
+        }
+      }
     },
     which (x, y) {
       const index = this.xyToIndex(x, y);
