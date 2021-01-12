@@ -38,8 +38,9 @@
 <script>
 import state from '@/state';
 
-const KEYS = {};
+const WINDOW_SIZE = 50;
 
+const KEYS = {};
 const TYPES = [
   {
     id: 'free', color: [ 255, 255, 255 ],
@@ -91,6 +92,7 @@ export default {
       width: 375,
       height: 300,
       city: null,
+      window: [],
     };
   },
   mounted () {
@@ -119,9 +121,11 @@ export default {
       } else if ((type === KEYS.FOREST || type === KEYS.PASTURE || type === KEYS.GRASS) &&
         neighbors.RESIDENTIAL > 4) {
         this.city[i] = KEYS.RESIDENTIAL;
-      } else if (neighbors.COMMERCIAL > neighbors.RESIDENTIAL) {
+      } else if (neighbors.COMMERCIAL > 0 && neighbors.RESIDENTIAL > 0 &&
+        neighbors.COMMERCIAL > neighbors.RESIDENTIAL) {
         this.city[i] = KEYS.COMMERCIAL;
-      } else if (neighbors.COMMERCIAL < neighbors.RESIDENTIAL) {
+      } else if (neighbors.COMMERCIAL > 0 && neighbors.RESIDENTIAL > 0 &&
+        neighbors.COMMERCIAL < neighbors.RESIDENTIAL) {
         this.city[i] = KEYS.RESIDENTIAL;
       }
 
@@ -144,10 +148,19 @@ export default {
 
       this.city = new Array(this.width * this.height).fill(KEYS.FOREST);
 
-      const initial = this.xyToIndex(Math.floor(this.width / 2), Math.floor(this.height / 2));
+      const x = Math.floor(this.width / 2);
+      const y = Math.floor(this.height / 2);
+      const initial = this.xyToIndex(x, y);
       this.city[initial] = KEYS.RESIDENTIAL;
 
-      this.evolve(initial - 1);
+      for (let y0 = y - WINDOW_SIZE; y0 < y + WINDOW_SIZE; y0++) {
+        for (let x0 = x - WINDOW_SIZE; x0 < x + WINDOW_SIZE; x0++) {
+          if (this.isValid(x0, y0)) {
+            const index = this.xyToIndex(x0, y0);
+            this.evolve(index);
+          }
+        }
+      }
 
       //////////
 
