@@ -162,17 +162,45 @@ export default {
       console.log('preseeding...');
       this.preseed(x, y);
 
-      console.log('evolving...');
-      for (let e = 0; e < EVOLUTIONS; e++) {
-        for (let y0 = y - WINDOW_SIZE; y0 < y + WINDOW_SIZE; y0++) {
-          for (let x0 = x - WINDOW_SIZE; x0 < x + WINDOW_SIZE; x0++) {
-            if (this.isValid(x0, y0)) {
-              const index = this.xyToIndex(x0, y0);
-              this.evolve(index);
-            }
+      console.log('determining...');
+      const candidatesYX = [];
+      for (let y0 = y - WINDOW_SIZE; y0 < y + WINDOW_SIZE; y0++) {
+        for (let x0 = x - WINDOW_SIZE; x0 < x + WINDOW_SIZE; x0++) {
+          if (this.isValid(x0, y0)) {
+            candidatesYX.push(this.xyToIndex(x0, y0));
           }
         }
       }
+      const candidatesXY = [];
+      for (let x0 = x - WINDOW_SIZE; x0 < x + WINDOW_SIZE; x0++) {
+        for (let y0 = y - WINDOW_SIZE; y0 < y + WINDOW_SIZE; y0++) {
+          if (this.isValid(x0, y0)) {
+            candidatesXY.push(this.xyToIndex(x0, y0));
+          }
+        }
+      }
+
+      console.log('evolving...');
+      for (let e = 0; e < EVOLUTIONS; e++) {
+        if (e % 4 === 0) {
+          for (let i = 0; i < candidatesYX.length; i++) {
+            this.evolve(candidatesYX[i]);
+          }
+        } else if (e % 4 === 3) {
+          for (let j = candidatesYX.length - 1; j >= 0; j--) {
+            this.evolve(candidatesYX[j]);
+          }
+        } else if (e % 4 === 1) {
+          for (let i = 0; i < candidatesXY.length; i++) {
+            this.evolve(candidatesXY[i]);
+          }
+        } else if (e % 4 === 2) {
+          for (let j = candidatesXY.length - 1; j >= 0; j--) {
+            this.evolve(candidatesXY[j]);
+          }
+        }
+      }
+
       console.log('done -', this.$utils.duration(Date.now() - start));
 
       //////////
