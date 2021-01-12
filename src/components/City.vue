@@ -38,9 +38,9 @@
 <script>
 import state from '@/state';
 
-const SEEDS = 100;
+const SEEDS = 250;
 const EVOLUTIONS = 500;
-const WINDOW_SIZE = 20;
+const WINDOW_SIZE = 25;
 
 function random (min, max) {
   return Math.floor(Math.random() * (max - min) + min);
@@ -51,7 +51,8 @@ function pick (array) {
   return array[index];
 }
 
-const KEYS = {};
+//////////
+
 const TYPES = [
   {
     id: 'water', color: [ 53, 90, 203 ],
@@ -80,14 +81,18 @@ const TYPES = [
   {
     id: 'road', color: [ 16, 16, 16 ],
   },
-].map((item, index) => {
+];
+
+TYPES.forEach((item, index) => {
   item.value = index;
   item.key = item.id.toUpperCase();
 
-  KEYS[item.key] = item;
+  TYPES[item.key] = item;
 
   return item;
 });
+
+//////////
 
 export default {
   name: 'City',
@@ -112,22 +117,22 @@ export default {
       if (type === TYPES.WATER || type === TYPES.SHORE || type === TYPES.MOUNTAIN) {
         this.city[i] = type;
       } else if (neighbors.RESIDENTIAL > 4) {
-        this.city[i] = KEYS.PARK;
+        this.city[i] = TYPES.PARK;
       } if (neighbors.UNDEVELOPED > 6 && (neighbors.RESIDENTIAL !== 0 ||
         neighbors.COMMERCIAL !== 0 || neighbors.INDUSTRIAL !== 0)) {
         const which = Math.max(neighbors.RESIDENTIAL, neighbors.COMMERCIAL, neighbors.INDUSTRIAL);
         if (which === neighbors.RESIDENTIAL) {
-          this.city[i] = KEYS.RESIDENTIAL;
+          this.city[i] = TYPES.RESIDENTIAL;
         } else if (which === neighbors.COMMERCIAL) {
-          this.city[i] = KEYS.COMMERCIAL;
+          this.city[i] = TYPES.COMMERCIAL;
         } else {
-          this.city[i] = KEYS.INDUSTRIAL;
+          this.city[i] = TYPES.INDUSTRIAL;
         }
       } else if (neighbors.RESIDENTIAL > 3) {
-        this.city[i] = KEYS.RESIDENTIAL;
+        this.city[i] = TYPES.RESIDENTIAL;
       } else if ((neighbors.RESIDENTIAL > 0 || neighbors.COMMERCIAL > 0 ||
         neighbors.INDUSTRIAL > 0) && neighbors.ROAD === 0) {
-        this.city[i] = KEYS.ROAD;
+        this.city[i] = TYPES.ROAD;
       }
     },
     generate () {
@@ -145,12 +150,12 @@ export default {
 
       //////////
 
-      this.city = new Array(this.width * this.height).fill(KEYS.UNDEVELOPED);
+      this.city = new Array(this.width * this.height).fill(TYPES.UNDEVELOPED);
 
       const x = Math.floor(this.width / 2);
       const y = Math.floor(this.height / 2);
       const initial = this.xyToIndex(x, y);
-      this.city[initial] = KEYS.UNDEVELOPED;
+      this.city[initial] = TYPES.UNDEVELOPED;
 
       const start = Date.now();
 
@@ -250,11 +255,11 @@ export default {
     },
     preseed (x, y) {
       const pickables = [
-        KEYS.RESIDENTIAL,
-        KEYS.COMMERCIAL,
-        KEYS.INDUSTRIAL,
-        KEYS.PARK,
-        KEYS.ROAD,
+        TYPES.RESIDENTIAL,
+        TYPES.COMMERCIAL,
+        TYPES.INDUSTRIAL,
+        TYPES.PARK,
+        TYPES.ROAD,
       ];
 
       console.log(pickables);
