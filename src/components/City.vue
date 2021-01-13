@@ -14,18 +14,25 @@
     >
       <v-card-text>
         <v-row>
-          <v-col cols="6">
+          <v-col cols="4">
             <v-text-field
-              v-model="width"
+              v-model="scaledWidth"
               dense
-              label="width"
+              label="Width"
             />
           </v-col>
-          <v-col cols="6">
+          <v-col cols="4">
             <v-text-field
-              v-model="height"
+              v-model="scaledHeight"
               dense
-              label="height"
+              label="Height"
+            />
+          </v-col>
+          <v-col cols="4">
+            <v-text-field
+              v-model="scale"
+              dense
+              label="Scale"
             />
           </v-col>
         </v-row>
@@ -113,9 +120,11 @@ export default {
   data () {
     return {
       state,
-      width: 125,
-      height: 100,
-      scale: 6,
+      width: 75,
+      height: 60,
+      scale: 10,
+      scaledWidth: 750,
+      scaledHeight: 600,
       city: null,
       window: [],
     };
@@ -199,6 +208,9 @@ export default {
       }
     },
     generate () {
+      this.width = Math.floor(this.scaledWidth / this.scale);
+      this.height = Math.floor(this.scaledHeight / this.scale);
+
       const offscreen = this.$refs.offscreen;
       const context = offscreen.getContext('2d');
 
