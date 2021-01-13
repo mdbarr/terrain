@@ -16,23 +16,46 @@
         <v-row>
           <v-col cols="4">
             <v-text-field
-              v-model="scaledWidth"
+              v-model.number="scaledWidth"
               dense
               label="Width"
             />
           </v-col>
           <v-col cols="4">
             <v-text-field
-              v-model="scaledHeight"
+              v-model.number="scaledHeight"
               dense
               label="Height"
             />
           </v-col>
           <v-col cols="4">
             <v-text-field
-              v-model="scale"
+              v-model.number="scale"
               dense
               label="Scale"
+            />
+          </v-col>
+        </v-row>
+        <v-row>
+          <v-col cols="4">
+            <v-text-field
+              v-model.number="seeds"
+              dense
+              label="Seeds"
+            />
+          </v-col>
+          <v-col cols="4">
+            <v-text-field
+              v-model.number="evolutions"
+              dense
+              label="Evolutions"
+            />
+          </v-col>
+          <v-col cols="4">
+            <v-text-field
+              v-model.number="windowSize"
+              dense
+              label="Window Size"
             />
           </v-col>
         </v-row>
@@ -48,10 +71,6 @@
 
 <script>
 import state from '@/state';
-
-const SEEDS = 200;
-const EVOLUTIONS = 10;
-const WINDOW_SIZE = 25;
 
 function random (min, max) {
   return Math.floor(Math.random() * (max - min) + min);
@@ -120,13 +139,15 @@ export default {
   data () {
     return {
       state,
-      width: 75,
+      city: null,
+      evolutions: 10,
       height: 60,
       scale: 10,
-      scaledWidth: 750,
       scaledHeight: 600,
-      city: null,
-      window: [],
+      scaledWidth: 750,
+      seeds: 200,
+      width: 75,
+      windowSize: 25,
     };
   },
   mounted () {
@@ -170,16 +191,16 @@ export default {
     flipFlopEvolve (x, y) {
       console.log('determining...');
       const candidatesYX = [];
-      for (let y0 = y - WINDOW_SIZE; y0 < y + WINDOW_SIZE; y0++) {
-        for (let x0 = x - WINDOW_SIZE; x0 < x + WINDOW_SIZE; x0++) {
+      for (let y0 = y - this.windowSize; y0 < y + this.windowSize; y0++) {
+        for (let x0 = x - this.windowSize; x0 < x + this.windowSize; x0++) {
           if (this.isValid(x0, y0)) {
             candidatesYX.push(this.xyToIndex(x0, y0));
           }
         }
       }
       const candidatesXY = [];
-      for (let x0 = x - WINDOW_SIZE; x0 < x + WINDOW_SIZE; x0++) {
-        for (let y0 = y - WINDOW_SIZE; y0 < y + WINDOW_SIZE; y0++) {
+      for (let x0 = x - this.windowSize; x0 < x + this.windowSize; x0++) {
+        for (let y0 = y - this.windowSize; y0 < y + this.windowSize; y0++) {
           if (this.isValid(x0, y0)) {
             candidatesXY.push(this.xyToIndex(x0, y0));
           }
@@ -187,7 +208,7 @@ export default {
       }
 
       console.log('evolving...');
-      for (let e = 0; e < EVOLUTIONS; e++) {
+      for (let e = 0; e < this.evolutions; e++) {
         if (e % 4 === 0) {
           for (let i = 0; i < candidatesYX.length; i++) {
             this.evolve(candidatesYX[i]);
@@ -235,8 +256,6 @@ export default {
 
       console.log('preseeding...');
       this.preseed(x, y);
-
-      console.log(this.neighborhood(initial));
 
       // this.flipFlopEvolve(x, y);
       this.shuffleEvolve(x, y);
@@ -334,9 +353,9 @@ export default {
         TYPES.PARK,
       ];
 
-      for (let s = 0; s < SEEDS; s++) {
-        const x1 = random(x - WINDOW_SIZE, x + WINDOW_SIZE);
-        const y1 = random(y - WINDOW_SIZE, y + WINDOW_SIZE);
+      for (let s = 0; s < this.seeds; s++) {
+        const x1 = random(x - this.windowSize, x + this.windowSize);
+        const y1 = random(y - this.windowSize, y + this.windowSize);
 
         if (this.isValid(x1, y1)) {
           const index = this.xyToIndex(x1, y1);
@@ -374,8 +393,8 @@ export default {
       console.log('determining...');
       const candidates = [];
 
-      for (let y0 = y - WINDOW_SIZE; y0 < y + WINDOW_SIZE; y0++) {
-        for (let x0 = x - WINDOW_SIZE; x0 < x + WINDOW_SIZE; x0++) {
+      for (let y0 = y - this.windowSize; y0 < y + this.windowSize; y0++) {
+        for (let x0 = x - this.windowSize; x0 < x + this.windowSize; x0++) {
           if (this.isValid(x0, y0)) {
             candidates.push(this.xyToIndex(x0, y0));
           }
@@ -383,7 +402,7 @@ export default {
       }
 
       console.log('evolving...');
-      for (let e = 0; e < EVOLUTIONS; e++) {
+      for (let e = 0; e < this.evolutions; e++) {
         shuffle(candidates);
         for (let i = 0; i < candidates.length; i++) {
           this.evolve(candidates[i]);
