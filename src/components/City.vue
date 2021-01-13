@@ -1,6 +1,10 @@
 <template>
   <div>
     <canvas
+      ref="offscreen"
+      style="display: none;"
+    />
+    <canvas
       ref="canvas"
       class="ma-3"
     />
@@ -195,14 +199,13 @@ export default {
       }
     },
     generate () {
-      const canvas = this.$refs.canvas;
-      const context = canvas.getContext('2d');
+      const offscreen = this.$refs.offscreen;
+      const context = offscreen.getContext('2d');
 
-      canvas.width = this.width;
-      canvas.height = this.height;
-      // Lazy scaling
-      canvas.style.width = `${ this.width * this.scale }px`;
-      canvas.style.height = `${ this.height * this.scale }px`;
+      offscreen.width = this.width;
+      offscreen.height = this.height;
+      offscreen.style.width = `${ this.width }px`;
+      offscreen.style.height = `${ this.height }px`;
 
       context.fillStyle = 'white';
       context.fillRect(0, 0, this.width, this.height);
@@ -242,6 +245,17 @@ export default {
       }
 
       context.putImageData(imageData, 0, 0);
+
+      // Scale
+      const canvas = this.$refs.canvas;
+      canvas.width = this.width * this.scale;
+      canvas.height = this.height * this.scale;
+      canvas.style.width = `${ this.width * this.scale }px`;
+      canvas.style.height = `${ this.height * this.scale }px`;
+
+      const ctx = canvas.getContext('2d');
+      const scaledData = this.scaleImageData(ctx, imageData, this.scale);
+      ctx.putImageData(scaledData, 0, 0);
     },
     indexToXY (i) {
       const x = i % this.width;
@@ -317,6 +331,32 @@ export default {
           this.city[index] = pick(pickables);
         }
       }
+    },
+    scaleImageData (context, imageData, scale) {
+      const scaled = context.createImageData(imageData.width * scale, imageData.height * scale);
+
+      for (let row = 0; row < imageData.height; row++) {
+        for (let col = 0; col < imageData.width; col++) {
+          const sourcePixel = [
+            imageData.data[(row * imageData.width + col) * 4 + 0],
+            imageData.data[(row * imageData.width + col) * 4 + 1],
+            imageData.data[(row * imageData.width + col) * 4 + 2],
+            imageData.data[(row * imageData.width + col) * 4 + 3],
+          ];
+          for (let y = 0; y < scale; y++) {
+            const destRow = row * scale + y;
+            for (let x = 0; x < scale; x++) {
+              const destCol = col * scale + x;
+              for (let i = 0; i < 4; i++) {
+                scaled.data[(destRow * scaled.width + destCol) * 4 + i] =
+                  sourcePixel[i];
+              }
+            }
+          }
+        }
+      }
+
+      return scaled;
     },
     shuffleEvolve (x, y) {
       console.log('determining...');
