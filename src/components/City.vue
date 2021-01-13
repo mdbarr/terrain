@@ -38,8 +38,8 @@
 <script>
 import state from '@/state';
 
-const SEEDS = 250;
-const EVOLUTIONS = 500;
+const SEEDS = 200;
+const EVOLUTIONS = 10;
 const WINDOW_SIZE = 25;
 
 function random (min, max) {
@@ -74,22 +74,22 @@ const TYPES = [
     id: 'mountain', color: [ 42, 42, 42 ],
   },
   {
-    id: 'undeveloped', color: [ 71, 156, 45 ],
+    id: 'undeveloped', color: [ 255, 255, 255 ],
   },
   {
-    id: 'residential', color: [ 0, 63, 255 ],
+    id: 'residential', color: [ 3, 169, 244 ],
   },
   {
-    id: 'commercial', color: [ 255, 0, 0 ],
+    id: 'commercial', color: [ 244, 67, 55 ],
   },
   {
-    id: 'industrial', color: [ 63, 0, 204 ],
+    id: 'industrial', color: [ 255, 152, 1 ],
   },
   {
-    id: 'park', color: [ 204, 255, 204 ],
+    id: 'park', color: [ 139, 195, 74 ],
   },
   {
-    id: 'road', color: [ 16, 16, 16 ],
+    id: 'road', color: [ 102, 102, 102 ],
   },
 ];
 
@@ -109,9 +109,9 @@ export default {
   data () {
     return {
       state,
-      width: 250,
-      height: 200,
-      scale: 3,
+      width: 125,
+      height: 100,
+      scale: 6,
       city: null,
       window: [],
     };
@@ -126,7 +126,12 @@ export default {
 
       if (type === TYPES.WATER || type === TYPES.SHORE || type === TYPES.MOUNTAIN) {
         this.city[i] = type;
-      } else if (neighbors.RESIDENTIAL > 4) {
+      } else if (type === TYPES.UNDEVELOPED && neighbors.ROAD < 4 &&
+        ((neighbors.NE === TYPES.ROAD && neighbors.SW === TYPES.ROAD) ||
+          (neighbors.NW === TYPES.ROAD && neighbors.SE === TYPES.ROAD) ||
+          neighbors.VERTICAL === TYPES.ROAD || neighbors.HORIZONTAL === TYPES.ROAD)) {
+        this.city[i] = TYPES.ROAD;
+      } else if (neighbors.RESIDENTIAL > 5 && (type === TYPES.RESIDENTIAL || type === TYPES.UNDEVELOPED)) {
         this.city[i] = TYPES.PARK;
       } if (neighbors.UNDEVELOPED > 6 && (neighbors.RESIDENTIAL !== 0 ||
         neighbors.COMMERCIAL !== 0 || neighbors.INDUSTRIAL !== 0)) {
@@ -138,11 +143,15 @@ export default {
         } else {
           this.city[i] = TYPES.INDUSTRIAL;
         }
-      } else if (neighbors.RESIDENTIAL > 3) {
-        this.city[i] = TYPES.RESIDENTIAL;
       } else if ((neighbors.RESIDENTIAL > 0 || neighbors.COMMERCIAL > 0 ||
         neighbors.INDUSTRIAL > 0) && neighbors.ROAD === 0) {
         this.city[i] = TYPES.ROAD;
+      } else if (neighbors.HORIZONTAL !== TYPES.UNDEVELOPED && neighbors.ROAD < 2 &&
+        neighbors.HORIZONTAL === neighbors.VERTICAL) {
+        this.city[i] = TYPES.ROAD;
+      } else if (type === TYPES.UNDEVELOPED && neighbors.PARK > 0 && neighbors.COMMERCIAL === 0 &&
+        neighbors.INDUSTRIAL === 0 && neighbors.RESIDENTIAL === 0 && neighbors.ROAD === 0) {
+        this.city[i] = TYPES.PARK;
       }
     },
     flipFlopEvolve (x, y) {
@@ -212,6 +221,8 @@ export default {
       console.log('preseeding...');
       this.preseed(x, y);
 
+      console.log(this.neighborhood(initial));
+
       // this.flipFlopEvolve(x, y);
       this.shuffleEvolve(x, y);
 
@@ -250,47 +261,41 @@ export default {
       return true;
     },
     neighborhood (i) {
+      const [ x, y ] = this.indexToXY(i);
+
+      const directions = {
+        N: [ x, y - 1 ],
+        NE: [ x + 1, y - 1 ],
+        E: [ x + 1, y ],
+        SE: [ x + 1, y + 1 ],
+        S: [ x, y + 1 ],
+        SW: [ x - 1, y + 1 ],
+        W: [ x - 1, y ],
+        NW: [ x - 1, y - 1 ],
+      };
+
       const neighbors = {};
       for (const type of TYPES) {
         neighbors[type.key] = 0;
       }
 
-      for (const neighbor of this.neighbors(i)) {
-        const which = this.which(...neighbor);
-        neighbors[which.key]++;
+      for (const direction in directions) {
+        const coord = directions[direction];
+
+        if (this.isValid(...coord)) {
+          const which = this.which(...coord);
+
+          neighbors[which.key]++;
+          neighbors[direction] = which;
+        }
       }
 
-      return neighbors;
-    },
-    neighbors (i) {
-      const [ x, y ] = this.indexToXY(i);
-      const neighbors = [];
-
-      if (this.isValid(x - 1, y - 1)) {
-        neighbors.push([ x - 1, y - 1 ]);
-      }
-      if (this.isValid(x, y - 1)) {
-        neighbors.push([ x, y - 1 ]);
-      }
-      if (this.isValid(x + 1, y - 1)) {
-        neighbors.push([ x + 1, y - 1 ]);
+      if (neighbors.N && neighbors.N === neighbors.S) {
+        neighbors.VERTICAL = neighbors.N;
       }
 
-      if (this.isValid(x - 1, y)) {
-        neighbors.push([ x - 1, y ]);
-      }
-      if (this.isValid(x + 1, y)) {
-        neighbors.push([ x + 1, y ]);
-      }
-
-      if (this.isValid(x - 1, y + 1)) {
-        neighbors.push([ x - 1, y + 1 ]);
-      }
-      if (this.isValid(x, y + 1)) {
-        neighbors.push([ x, y + 1 ]);
-      }
-      if (this.isValid(x + 1, y + 1)) {
-        neighbors.push([ x + 1, y + 1 ]);
+      if (neighbors.E && neighbors.E === neighbors.W) {
+        neighbors.HORIZONTAL = neighbors.E;
       }
 
       return neighbors;
@@ -301,7 +306,6 @@ export default {
         TYPES.COMMERCIAL,
         TYPES.INDUSTRIAL,
         TYPES.PARK,
-        TYPES.ROAD,
       ];
 
       for (let s = 0; s < SEEDS; s++) {
