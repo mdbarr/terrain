@@ -185,7 +185,7 @@ export default {
 
       const imageData = context.getImageData(0, 0, this.width, this.height);
       this.terrain = this.generatePerlinNoise(this.width, this.height, {
-        octaveCount: 9, persistence: 0.60,
+        octaveCount: 9, persistence: 0.60, amplitude: 0.2,
       });
 
       const highest = [];

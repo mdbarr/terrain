@@ -211,12 +211,12 @@ export default {
       }
 
       this.terrain = this.generatePerlinNoise(this.width, this.height, {
-        octaveCount: 9, persistence: 0.60,
+        octaveCount: 9, persistence: 0.5, ammplitude: 0.2,
       });
 
       const geometry = new Three.PlaneGeometry(60, 60, this.width - 1, this.height - 1);
       for (let i = 0; i < geometry.vertices.length; i++) {
-        geometry.vertices[i].z = Math.floor(50 - (this.terrain[i] * 100));
+        geometry.vertices[i].z = Math.floor(50 - (this.terrain[i] * 50)) - 5;
       }
 
       for (let j = 0; j < geometry.faces.length; j++) {
