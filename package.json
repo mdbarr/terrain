@@ -11,7 +11,7 @@
     "@hyperingenuity/vue-plugin": "^0.7.1",
     "barrkeep": "^2.8.0",
     "core-js": "^3.8.2",
-    "three": "^0.124.0",
+    "three": "^0.125.0",
     "vue": "^2.6.12",
     "vue-router": "^3.4.9",
     "vuetify": "^2.4.2",
