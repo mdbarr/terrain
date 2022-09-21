@@ -14,7 +14,7 @@
     "three": "^0.126.0",
     "vue": "^2.6.12",
     "vue-router": "^3.5.1",
-    "vuetify": "^2.4.5",
+    "vuetify": "^2.6.10",
     "yargs": "^16.2.0"
   },
   "devDependencies": {
